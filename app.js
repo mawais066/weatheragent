@@ -1,9 +1,9 @@
 // Configuration State
 let config = {
-    weatherApiKey: localStorage.getItem("weatherApiKey") || "",
-    modelName: localStorage.getItem("modelName") || "Qwen/Qwen3.8-2.4T-A95B",
-    baseUrl: localStorage.getItem("baseUrl") || "https://openrouter.ai/api/v1",
-    apiKey: localStorage.getItem("apiKey") || ""
+    weatherApiKey: "3aa2ef9754d50935790a063d9a5508ac",
+    modelName: "Qwen/Qwen3.8-2.4T-A95B",
+    baseUrl: "https://openrouter.ai/api/v1",
+    apiKey: ""
 };
 
 // Weather condition emoji mapper
@@ -188,6 +188,111 @@ function appendMessage(sender, text, isAi = false) {
     chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
+// ─── Intent Detection ──────────────────────────────────────────────────────
+
+// 1. Greeting
+function detectGreeting(text) {
+    const greetings = [
+        "hello", "hi", "hey", "assalam", "salam", "assalamualaikum",
+        "good morning", "good evening", "good afternoon", "good night",
+        "sup", "hiya", "howdy", "adaab", "namaskar", "kia haal", "kia hal",
+        "how are you", "kaisa ho", "kaisay ho", "kya haal hai", "wassup"
+    ];
+    const lower = text.toLowerCase().trim();
+    // Only greeting if short or starts with greeting
+    return greetings.some(g => lower === g || lower.startsWith(g) || (lower.includes(g) && lower.length < 30));
+}
+
+function getGreetingReply(text) {
+    const lower = text.toLowerCase();
+    if (lower.includes("assalam") || lower.includes("salam")) {
+        return "وعلیکم السلام! 😊 Main aapka Weather Assistant hoon.\n\nKisi bhi city ka mosam poochein — Lahore, Karachi, London, Dubai ya koi bhi!";
+    }
+    if (lower.includes("good morning")) {
+        return "Good Morning! ☀️ Aaj ka din acha guzre! Kisi city ka mosam ya forecast jaanna chahte hain?";
+    }
+    if (lower.includes("good evening")) {
+        return "Good Evening! 🌆 Shaam khushgawar ho! Koi weather update chahiye?";
+    }
+    if (lower.includes("good night")) {
+        return "Good Night! 🌙 Meethi neend aaye! Kal ke liye koi city ka forecast chahiye?";
+    }
+    if (lower.includes("how are you") || lower.includes("kaisa ho") || lower.includes("kaisay ho") || lower.includes("kya haal") || lower.includes("kia haal")) {
+        return "Main bilkul theek hoon, shukriya puchne ke liye! 😄\n\nAap ka kya haal hai? Kaunsi city ka mosam dekhna hai aaj?";
+    }
+    return "Hello! 👋 Assalam-o-Alaikum!\n\nMain aapka Weather AI Assistant hoon 🌦️\nAap mujhse pooch saktay hain:\n• Lahore ka mosam kaisa hai?\n• London mein aaj barish hogi?\n• Karachi ki 5-din forecast batao!";
+}
+
+// 2. Weather intent — ONLY reply with weather when user actually asks for it
+function detectWeatherIntent(text) {
+    const weatherWords = [
+        "mosam", "mausam", "weather", "temperature", "barish", "rain",
+        "forecast", "garmi", "thand", "dhoop", "aandhi", "toofan",
+        "humid", "wind", "hawa", "fog", "smog", "snow", "barf",
+        "degree", "celsius", "feels like", "humidity", "pressure",
+        "aaj ka", "kal ka", "week", "5 din", "5-din", "upcoming"
+    ];
+    const lower = text.toLowerCase();
+    return weatherWords.some(w => lower.includes(w));
+}
+
+// 3. General knowledge / chat — answer directly
+function getGeneralReply(text) {
+    const lower = text.toLowerCase();
+
+    // Who are you / kya ho tum
+    if (lower.includes("who are you") || lower.includes("kaun ho") || lower.includes("kya ho tum") || lower.includes("apna parichay") || lower.includes("introduce")) {
+        return "Main ek **Weather AI Assistant** hoon! 🤖🌦️\n\nMujhe OpenWeatherMap API aur AI ki madad se banaya gaya hai.\nMain aapko kisi bhi city ka:\n• Live mosam bata sakta hoon\n• 5-din ki forecast de sakta hoon\n• Kapray aur safar ke mashwaray de sakta hoon\n\nBas city ka naam likhein — main tayaar hoon! 😊";
+    }
+
+    // What is AI / artificial intelligence
+    if (lower.includes("what is ai") || lower.includes("artificial intelligence") || lower.includes("ai kya hai") || lower.includes("machine learning")) {
+        return "AI (Artificial Intelligence) ek technology hai jisme computers ko insaan jaise sochne aur samajhne ki ability di jaati hai 🧠\n\nMujhe bhi AI se banaya gaya hai taake main aapke weather questions samjh sakoon aur helpful jawab de sakoon! 🌦️";
+    }
+
+    // Jokes
+    if (lower.includes("joke") || lower.includes("mazak") || lower.includes("funny") || lower.includes("lataifa") || lower.includes("hansi")) {
+        const jokes = [
+            "😄 Ek banda mosam se bola: 'Tum bohot unpredictable ho!'\nMosam ne kaha: 'Main AI hoon, mujhe maafi do!' 🌦️",
+            "😂 Weather app ne kaha: 'Aaj dhoop hogi!'\nAur bahar barish ho rahi thi.\nMain woh app nahi hoon — main reliable hoon! ☀️→🌧️",
+            "😄 'Kya tum kabhi galat bhi hotay ho?'\n'Haan! Lekin mosam jitna nahi!' 😅🌤️"
+        ];
+        return jokes[Math.floor(Math.random() * jokes.length)];
+    }
+
+    // Thanks / shukriya
+    if (lower.includes("thank") || lower.includes("shukriya") || lower.includes("thanks") || lower.includes("jazakallah") || lower.includes("شکریہ")) {
+        return "Khushi hui madad kar ke! 😊\nKoi aur sawaal ho — weather ya kuch bhi — poochte raho! 🌦️";
+    }
+
+    // Bye / goodbye
+    if (lower.includes("bye") || lower.includes("goodbye") || lower.includes("khuda hafiz") || lower.includes("allah hafiz") || lower.includes("tata")) {
+        return "Allah Hafiz! 👋 Khyal rakhein!\nKabhi bhi mosam jaanna ho to wapis aana 🌤️";
+    }
+
+    // What can you do
+    if (lower.includes("kya kar") || lower.includes("what can you") || lower.includes("help") || lower.includes("madad") || lower.includes("kya karta")) {
+        return "Main yeh sab kar sakta hoon: 🌟\n\n🌡️ **Kisi bhi city ka live mosam** batana\n📅 **5-din ki forecast** dena\n👗 **Kapray pehanne ke mashwaray** dena\n☂️ **Chatri/jacket zaroorat** btana\n🌍 **Duniya bhar ki cities** cover karta hoon\n\nBas likho: 'Lahore ka mosam' ya 'London forecast'!";
+    }
+
+    // What is weather
+    if (lower.includes("what is weather") || lower.includes("mosam kya hota") || lower.includes("weather kya hai")) {
+        return "Mosam (Weather) ek jagah ki atmos-pheric halat hai jo:\n🌡️ Temperature • 💧 Humidity • 💨 Wind Speed\n🌧️ Rain • ☁️ Clouds • 🌪️ Storms\nse milkar banti hai!\n\nKisi specific city ka mosam jaanna hai? 😊";
+    }
+
+    // Name
+    if (lower.includes("tera naam") || lower.includes("your name") || lower.includes("aapka naam") || lower.includes("tumhara naam")) {
+        return "Mera naam **Weather AI Assistant** hai! 🤖\nAap mujhe 'WeatherBot' bhi keh saktay hain 😄\nAb batao — kaunsi city ka mosam chahiye?";
+    }
+
+    // Age / kya umar
+    if (lower.includes("umar") || lower.includes("age") || lower.includes("kitna purana") || lower.includes("kab bana")) {
+        return "Main ek AI hoon — meri koi umar nahi hoti! 😄\nLekin main hamesha fresh aur updated hoon, bilkul taza mosam ki tarah! 🌤️";
+    }
+
+    return null; // No general reply found
+}
+
 // Ask LangChain Weather Agent
 async function handleUserQuery(userQuery) {
     if (!userQuery.trim()) return;
@@ -196,6 +301,33 @@ async function handleUserQuery(userQuery) {
     const agentInput = document.getElementById("agentInput");
     agentInput.value = "";
 
+    // ── Tier 1: Greetings ──────────────────────────────────────────────────
+    if (detectGreeting(userQuery)) {
+        setTimeout(() => {
+            appendMessage("ai", getGreetingReply(userQuery), true);
+        }, 350);
+        return;
+    }
+
+    // ── Tier 2: General chat (no weather fetch) ────────────────────────────
+    const generalReply = getGeneralReply(userQuery);
+    if (generalReply) {
+        setTimeout(() => {
+            appendMessage("ai", generalReply, true);
+        }, 350);
+        return;
+    }
+
+    // ── Tier 3: Weather query — fetch live data ────────────────────────────
+    if (!detectWeatherIntent(userQuery)) {
+        // User said something unrelated — polite fallback
+        setTimeout(() => {
+            appendMessage("ai",
+                "Hmm, main Weather AI hoon 🌦️\n\nMujhe weather ke baarey mein poochein:\n• 'Lahore ka aaj ka mosam'\n• 'Karachi mein barish hogi?'\n• 'London 5-din forecast'\n\nYa kuch aur madad chahiye? 😊", true);
+        }, 350);
+        return;
+    }
+
     // Show temporary thinking state
     const chatContainer = document.getElementById("chatMessages");
     const thinkingDiv = document.createElement("div");
@@ -203,7 +335,7 @@ async function handleUserQuery(userQuery) {
     thinkingDiv.innerHTML = `
         <div class="avatar">🤖</div>
         <div class="message-content">
-            <p><em>Agent is executing LangChain tools & querying Qwen (${config.modelName})... ⏳</em></p>
+            <p><em>Mosam ki talash ho rahi hai... ⏳</em></p>
         </div>
     `;
     chatContainer.appendChild(thinkingDiv);
@@ -226,27 +358,56 @@ async function handleUserQuery(userQuery) {
             throw new Error(`Server returned status ${response.status}`);
         }
     } catch (err) {
-        // Fallback intelligent handler if Python server is not currently running
+        // Fallback: direct OpenWeatherMap call if Python server not running
         if (chatContainer.contains(thinkingDiv)) {
             chatContainer.removeChild(thinkingDiv);
         }
 
-        // Check if query contains a city name
         const words = userQuery.toLowerCase();
         let matchedCity = "Lahore";
-        ["lahore", "karachi", "islamabad", "london", "dubai", "new york", "tokyo", "paris", "delhi"].forEach(c => {
-            if (words.includes(c)) matchedCity = c.charAt(0).toUpperCase() + c.slice(1);
+        ["lahore", "karachi", "islamabad", "rawalpindi", "multan", "peshawar",
+         "london", "dubai", "new york", "tokyo", "paris", "delhi", "mumbai",
+         "sydney", "toronto", "riyadh"].forEach(c => {
+            if (words.includes(c)) matchedCity = c.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
         });
 
-        // Trigger weather update on left panel
-        fetchWeatherData(matchedCity);
+        // Fetch live weather directly
+        try {
+            const wUrl = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(matchedCity)}&appid=${config.weatherApiKey}&units=metric`;
+            const wRes = await fetch(wUrl);
+            const wData = await wRes.json();
 
-        const aiResponse = `🌤️ **Weather Intelligence for ${matchedCity}:**\n\n` +
-            `• Current Temperature is around 26°C to 30°C with clear to partly cloudy conditions.\n` +
-            `• **LangChain Agent Advice:** Light breathable cotton clothing is recommended. Keep hydration handy.\n\n` +
-            `*(Note: To connect the live LangChain Qwen Agent directly to this UI, run \`python app.py\` in terminal!)*`;
+            if (wRes.ok) {
+                fetchWeatherData(matchedCity);
+                const temp = Math.round(wData.main.temp);
+                const feels = Math.round(wData.main.feels_like);
+                const hum = wData.main.humidity;
+                const wind = (wData.wind.speed * 3.6).toFixed(1);
+                const cond = wData.weather[0].description;
+                const emoji = getWeatherEmoji(cond);
 
-        appendMessage("ai", aiResponse, true);
+                let advice = "";
+                if (temp > 35) advice = "Bohat garmi hai! Halke kapray pehnen aur khub paani piyein. 💧";
+                else if (temp > 28) advice = "Garmi hai. Cotton kapray suitable hain. Sunscreen lagana na bhoolein.";
+                else if (temp < 15) advice = "Thand hai! Jacket ya sweater zaroori hai. 🧥";
+                else advice = "Mosam theek hai. Normal kapray theek rahein ge.";
+
+                if (hum > 75) advice += "\n• Namee ziada hai — paani khub piyein.";
+                if (cond.includes("rain") || cond.includes("drizzle")) advice += "\n• Barish ka imkaan hai! Chatri zaroor sath rakhein. ☂️";
+
+                const aiResponse = `${emoji} **${matchedCity} ka Mosam:**\n\n` +
+                    `• Halat: ${cond.charAt(0).toUpperCase() + cond.slice(1)}\n` +
+                    `• Temperature: ${temp}°C (Feels like ${feels}°C)\n` +
+                    `• Humidity: ${hum}%\n` +
+                    `• Wind: ${wind} km/h\n\n` +
+                    `💡 **Mashwara:** ${advice}`;
+                appendMessage("ai", aiResponse, true);
+            } else {
+                appendMessage("ai", `❌ ${matchedCity} ka mosam nahi mila. Please city ka naam dobara check karein.`, true);
+            }
+        } catch (weatherErr) {
+            appendMessage("ai", "❌ Network error. Internet connection check karein aur dobara koshish karein.", true);
+        }
     }
 }
 
@@ -305,27 +466,5 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
     });
 
-    // Modal Settings
-    const modal = document.getElementById("settingsModal");
-    document.getElementById("configBtn").addEventListener("click", () => {
-        modal.classList.remove("hidden");
-    });
-    document.getElementById("closeModalBtn").addEventListener("click", () => {
-        modal.classList.add("hidden");
-    });
-
-    document.getElementById("saveSettingsBtn").addEventListener("click", () => {
-        config.weatherApiKey = document.getElementById("modalWeatherKey").value.trim();
-        config.modelName = document.getElementById("modalModelName").value.trim();
-        config.baseUrl = document.getElementById("modalBaseUrl").value.trim();
-        config.apiKey = document.getElementById("modalApiKey").value.trim();
-
-        localStorage.setItem("weatherApiKey", config.weatherApiKey);
-        localStorage.setItem("modelName", config.modelName);
-        localStorage.setItem("baseUrl", config.baseUrl);
-        localStorage.setItem("apiKey", config.apiKey);
-
-        modal.classList.add("hidden");
-        alert("Settings saved! Updated API key and Model configurations.");
-    });
 });
+// Settings modal removed — API key is configured in app.js directly.
