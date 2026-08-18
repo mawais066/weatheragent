@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌦️ Qwen LangChain Weather Agent</title>
+    <meta name="description" content="Intelligent Weather Agent powered by Qwen LLM and LangChain with OpenWeatherMap live data">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+    <div class="ambient-glow glow-3"></div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-group">
+                <div class="logo-icon">🌤️</div>
+                <div class="logo-text">
+                    <h1>Weather Agent <span class="badge">Qwen 3.8</span></h1>
+                    <p>Powered by LangChain & OpenWeatherMap</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="status-indicator online">
+                    <span class="pulse-dot"></span>
+                    <span class="status-text">Agent Online</span>
+                </div>
+                <button id="configBtn" class="btn-icon" title="API Configuration">⚙️ Settings</button>
+            </div>
+        </header>
+
+        <!-- Main Layout: Grid with Dashboard & AI Chat -->
+        <main class="main-grid">
+            <!-- Left Column: Live Weather Explorer -->
+            <section class="weather-panel glass-card">
+                <div class="panel-header">
+                    <h2>Live Weather Search</h2>
+                    <span class="subtext">Real-time telemetry</span>
+                </div>
+
+                <!-- Search Input -->
+                <div class="search-box">
+                    <input type="text" id="cityInput" placeholder="Enter city name (e.g. Lahore, Karachi, London)..." value="Lahore">
+                    <button id="searchBtn" class="btn-primary">
+                        <span class="btn-icon-inner">🔍</span> Search
+                    </button>
+                </div>
+
+                <!-- Quick City Tags -->
+                <div class="quick-cities">
+                    <span class="quick-label">Quick:</span>
+                    <button class="city-chip" data-city="Lahore">Lahore</button>
+                    <button class="city-chip" data-city="Karachi">Karachi</button>
+                    <button class="city-chip" data-city="Islamabad">Islamabad</button>
+                    <button class="city-chip" data-city="London">London</button>
+                    <button class="city-chip" data-city="Dubai">Dubai</button>
+                    <button class="city-chip" data-city="New York">New York</button>
+                    <button class="city-chip" data-city="Tokyo">Tokyo</button>
+                </div>
+
+                <!-- Current Weather Card -->
+                <div id="currentWeatherCard" class="weather-hero-card">
+                    <div class="hero-top">
+                        <div>
+                            <h3 id="cityName">Lahore, PK</h3>
+                            <p id="weatherTime">Live Conditions</p>
+                        </div>
+                        <div class="weather-emoji-big" id="weatherIcon">☀️</div>
+                    </div>
+
+                    <div class="hero-temp-row">
+                        <div class="big-temp" id="tempDisplay">28°<span class="unit">C</span></div>
+                        <div class="temp-meta">
+                            <span class="condition-badge" id="conditionText">Clear Sky</span>
+                            <span class="feels-like" id="feelsLikeText">Feels like 30°C</span>
+                        </div>
+                    </div>
+
+                    <!-- Metrics Grid -->
+                    <div class="metrics-grid">
+                        <div class="metric-item">
+                            <span class="metric-icon">💧</span>
+                            <div class="metric-info">
+                                <span class="label">Humidity</span>
+                                <span class="value" id="humidityVal">45%</span>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-icon">💨</span>
+                            <div class="metric-info">
+                                <span class="label">Wind Speed</span>
+                                <span class="value" id="windVal">12.5 km/h</span>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-icon">🌡️</span>
+                            <div class="metric-info">
+                                <span class="label">Min / Max</span>
+                                <span class="value" id="minMaxVal">22° / 32°C</span>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-icon">🧭</span>
+                            <div class="metric-info">
+                                <span class="label">Pressure</span>
+                                <span class="value" id="pressureVal">1012 hPa</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5-Day Forecast -->
+                <div class="forecast-section">
+                    <h3>5-Day Forecast</h3>
+                    <div class="forecast-list" id="forecastList">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Column: Qwen LangChain Agent Chat -->
+            <section class="agent-panel glass-card">
+                <div class="panel-header chat-header">
+                    <div>
+                        <h2>🤖 Qwen Weather AI Assistant</h2>
+                        <span class="subtext">Ask in English, Urdu or Roman Urdu</span>
+                    </div>
+                    <button id="clearChatBtn" class="btn-ghost" title="Clear Conversation">🗑️ Clear</button>
+                </div>
+
+                <!-- Chat History Messages -->
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message ai-message">
+                        <div class="avatar">🤖</div>
+                        <div class="message-content">
+                            <p>Assalam-o-Alaikum! Main aapka <strong>Qwen LangChain Weather Agent</strong> hoon. 🌦️</p>
+                            <p>Aap mujh se kisi bhi city ka mosam, 5 din ki forecast, kapray pehanne ke mashwaray, ya safar ke precautions pooch saktay hain!</p>
+                            <div class="suggested-prompts">
+                                <button class="prompt-chip" data-prompt="Lahore ka mosam kaisa hai aur kya barish hogi?">🌧️ Lahore mein barish hogi?</button>
+                                <button class="prompt-chip" data-prompt="Should I carry an umbrella in London today?">☂️ London Umbrella Advice</button>
+                                <button class="prompt-chip" data-prompt="Karachi aur Islamabad ke mosam ka comparison karein">⚖️ Karachi vs Islamabad</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input Form -->
+                <form id="chatForm" class="chat-input-container">
+                    <input type="text" id="agentInput" placeholder="Ask anything about the weather (e.g., 'What should I wear today in Lahore?')..." autocomplete="off">
+                    <button type="submit" id="sendBtn" class="btn-send">
+                        <span>Send</span> 🚀
+                    </button>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal-overlay hidden">
+        <div class="modal-card glass-card">
+            <div class="modal-header">
+                <h3>⚙️ Agent & API Settings</h3>
+                <button id="closeModalBtn" class="btn-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="modalWeatherKey">OpenWeatherMap API Key:</label>
+                    <input type="text" id="modalWeatherKey" placeholder="Enter OpenWeatherMap API Key">
+                    <small class="hint">Active in <code>.env</code> file</small>
+                </div>
+                <div class="form-group">
+                    <label for="modalModelName">Model Name:</label>
+                    <input type="text" id="modalModelName" value="Qwen/Qwen3.8-2.4T-A95B">
+                </div>
+                <div class="form-group">
+                    <label for="modalBaseUrl">OpenAI / OpenRouter Base URL:</label>
+                    <input type="text" id="modalBaseUrl" value="https://openrouter.ai/api/v1">
+                </div>
+                <div class="form-group">
+                    <label for="modalApiKey">LLM API Key (OpenRouter/OpenAI):</label>
+                    <input type="password" id="modalApiKey" placeholder="sk-or-v1-... (optional for local mode)">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="saveSettingsBtn" class="btn-primary">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
