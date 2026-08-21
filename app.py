@@ -32,8 +32,10 @@ def chat():
 
 
 if __name__ == "__main__":
+    import os
+    port = int(os.environ.get("PORT", 5000))
     print("=" * 60)
-    print("  Weather Agent (Qwen + LangChain + Flask) Running!")
-    print("  Open: http://localhost:5000")
+    print(f"  Weather Agent Running on port {port}!")
     print("=" * 60)
-    app.run(debug=False, port=5000)
+    app.run(host="0.0.0.0", port=port, debug=False)
+

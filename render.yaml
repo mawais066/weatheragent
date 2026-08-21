@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: weatheragent
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: OPENWEATHERMAP_API_KEY
+        sync: false
+      - key: MODEL_NAME
+        value: Qwen/Qwen3.8-2.4T-A95B
+      - key: TEMPERATURE
+        value: "0.2"
