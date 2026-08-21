@@ -5,7 +5,7 @@ Powered by Qwen/Qwen3.8-2.4T-A95B + OpenWeatherMap
 from flask import Flask, render_template, request, jsonify
 from agent import ask_qwen_agent, get_current_weather, get_forecast
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="templates", static_folder=".", static_url_path="")
 
 
 @app.route("/")
